@@ -25,21 +25,30 @@ Der Container überwacht dauerhaft den Ordner `csv/`. Sobald eine `.csv`-Datei d
 
 ### Vorbereitung
 
-1. `.env`-Datei im Projektverzeichnis anlegen:
+1. Repo auf dem Server auschecken:
+
+```bash
+cd /opt
+git clone <dein-repo-url> actual-importer
+cd actual-importer
+```
+
+2. `.env`-Datei im Projektverzeichnis anlegen:
 
 ```dot
+ACTUAL_SERVER_URL=https://actual.lan
 ACTUAL_PASSWORD=meinpasswort
 ACTUAL_SYNC_ID=1cfdbb80-6274-49bf-b0c2-737235a4c81f
 ACTUAL_ACCOUNT_ID=08a5ac5d-e276-4f28-96e7-28a1118dd9b1
 ```
 
-2. Container starten:
+3. Container bauen und starten:
 
 ```bash
 docker compose up --build -d
 ```
 
-3. CSV-Datei in `csv/` legen – der Import startet automatisch.
+4. CSV-Datei in `/opt/actual-importer/csv/` legen – der Import startet automatisch.
 
 ### Umgebungsvariablen
 
