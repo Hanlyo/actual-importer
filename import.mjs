@@ -79,13 +79,13 @@ function parseDkbCsv(filePath) {
   // DKB liefert CSV als UTF-8; BOM falls vorhanden entfernen
   const raw = readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, '');
 
-  // DKB verwendet Komma als Trennzeichen; Anführungszeichen sind keine Begrenzer
+  // DKB verwendet Komma als Trennzeichen und Anführungszeichen als Textbegrenzer
   const records = parse(raw, {
     delimiter:        ',',
     columns:          true,
     skip_empty_lines: true,
     trim:             true,
-    quote:            false,
+    relax_quotes:     true,
     bom:              true,
   });
 
