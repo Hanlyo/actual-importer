@@ -3,6 +3,7 @@ import { parse } from 'csv-parse/sync';
 import { readFileSync, mkdirSync, rmSync } from 'fs';
 import { resolve, join } from 'path';
 import { tmpdir } from 'os';
+import iconv from 'iconv-lite';
 
 // Node.js verwendet keinen Windows-Zertifikatsspeicher – lokale HTTPS-Zertifikate
 // (z.B. Tailscale/self-signed) werden ohne diesen Schalter abgelehnt.
@@ -76,9 +77,11 @@ function buildImportedId(row, index) {
  * Liest eine DKB-CSV-Datei und gibt ein Array von Actual-Transaktionsobjekten zurück.
  */
 function parseDkbCsv(filePath) {
-  const raw = readFileSync(filePath, 'utf-8');
+  // DKB liefert CSV meist in Windows-1252; in UTF-8 dekodieren und BOM entfernen
+  const rawBuffer = readFileSync(filePath);
+  const raw = iconv.decode(rawBuffer, 'win1252').replace(/^\uFEFF/, '');
 
-  // DKB verwendet Semikolon als Trennzeichen und Anführungszeichen als Textbegrenzer
+  // DKB verwendet Komma als Trennzeichen und Anführungszeichen als Textbegrenzer
   const records = parse(raw, {
     delimiter:        ',',
     columns:          true,
