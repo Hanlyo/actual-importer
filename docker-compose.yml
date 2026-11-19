@@ -1,0 +1,17 @@
+services:
+  dkb-actual-importer:
+    build: .
+    environment:
+      - ACTUAL_SERVER_URL=https://actual.lan
+      - ACTUAL_PASSWORD=${ACTUAL_PASSWORD}
+      - ACTUAL_SYNC_ID=${ACTUAL_SYNC_ID}
+      # Optional: Pfad zu einem lokalen CA-Zertifikat
+      # - NODE_EXTRA_CA_CERTS=/certs/ca.crt
+      # Nur bei self-signed/Tailscale-Zertifikaten nötig:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    volumes:
+      # CSV-Dateien kommen hier rein
+      - ./csv:/csv:ro
+      # Optional: CA-Zertifikat mounten
+      # - ./certs:/certs:ro
+    command: ["08a5ac5d-e276-4f28-96e7-28a1118dd9b1", "/csv/umsaetze.csv"]

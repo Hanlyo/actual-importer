@@ -1,0 +1,13 @@
+{
+  "name": "dkb-actual-importer",
+  "version": "1.0.0",
+  "description": "DKB CSV Importer für Actual Budget",
+  "type": "module",
+  "scripts": {
+    "import": "node import.mjs"
+  },
+  "dependencies": {
+    "@actual-app/api": "^26.11.0",
+    "csv-parse": "^5.6.0"
+  }
+}
