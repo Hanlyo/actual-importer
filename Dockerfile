@@ -7,10 +7,10 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # App-Code kopieren
-COPY import.mjs ./
+COPY import.mjs watch.mjs ./
 
-# Cache-Verzeichnis vorbereiten
+# Cache- und Watch-Verzeichnisse vorbereiten
 ENV ACTUAL_DATA_DIR=/tmp/actual-cache
-RUN mkdir -p /tmp/actual-cache
+RUN mkdir -p /tmp/actual-cache /csv/done /csv/error
 
-ENTRYPOINT ["node", "import.mjs"]
+CMD ["node", "watch.mjs"]

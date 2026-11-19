@@ -1,7 +1,6 @@
 import * as api from '@actual-app/api';
 import { parse } from 'csv-parse/sync';
 import { readFileSync, mkdirSync, rmSync } from 'fs';
-import { spawnSync } from 'child_process';
 import { resolve, join } from 'path';
 import { tmpdir } from 'os';
 
@@ -12,8 +11,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // ─── Konfiguration ────────────────────────────────────────────────────────────
 const CONFIG = {
   serverURL:  process.env.ACTUAL_SERVER_URL  || 'https://actual.lan',
-  password:   process.env.ACTUAL_PASSWORD    || 'H3PpVhXp7%Fa#SYYhRWp',
-  syncId:     process.env.ACTUAL_SYNC_ID     || '8be5f5b2-14c2-474b-99c0-db8e55914636',
+  password:   process.env.ACTUAL_PASSWORD    || '',
+  syncId:     process.env.ACTUAL_SYNC_ID     || '',
   dataDir:    process.env.ACTUAL_DATA_DIR    || join(tmpdir(), 'actual-cache'),
   // TLS: Tailscale-Zertifikat ist vertrauenswürdig, daher kein NODE_TLS_REJECT_UNAUTHORIZED nötig.
   // Falls doch Probleme: NODE_EXTRA_CA_CERTS=/pfad/zum/cert.crt node import.mjs ...
@@ -117,35 +116,33 @@ function parseDkbCsv(filePath) {
 
 /**
  * Budget ließ sich nicht laden: Fast immer ist die installierte @actual-app/api älter als der
- * Server (dessen Datenbank hat Migrationen, die die API nicht kennt). Reparatur: Cache löschen,
- * API aktualisieren und das Script einmalig neu starten.
+ * Server (dessen Datenbank hat Migrationen, die die API nicht kennt).
+ * Im Docker-Container kann das Paket nicht nachträglich aktualisiert werden – dafür muss ein
+ * neues Image gebaut werden. Daher nur eine aussagekräftige Fehlermeldung ausgeben.
  */
 async function selfHeal() {
-  if (process.env.ACTUAL_IMPORTER_RETRIED) {
-    console.error('❌ Budget lässt sich auch mit der neuesten API nicht laden (out-of-sync-migrations).');
-    console.error('   Läuft der Server evtl. als Nightly/Edge-Build? Dann: npm install @actual-app/api@nightly');
-    throw new Error('Budget konnte nicht geladen werden');
-  }
-
-  console.warn('⚠ Budget konnte nicht geladen werden (out-of-sync-migrations).');
-  console.warn('  → Cache wird gelöscht, @actual-app/api aktualisiert und der Import neu gestartet...\n');
-
   await api.shutdown().catch(() => {});
   rmSync(CONFIG.dataDir, { recursive: true, force: true });
 
-  const npm = spawnSync('npm install @actual-app/api@latest', { stdio: 'inherit', shell: true });
-  if (npm.status !== 0) throw new Error('npm install @actual-app/api@latest fehlgeschlagen');
-
-  const retry = spawnSync(process.execPath, process.argv.slice(1), {
-    stdio: 'inherit',
-    env:   { ...process.env, ACTUAL_IMPORTER_RETRIED: '1' },
-  });
-  process.exit(retry.status ?? 1);
+  console.error('❌ Budget lässt sich nicht laden (out-of-sync-migrations).');
+  console.error('   Die @actual-app/api Version passt wahrscheinlich nicht zur Serverversion.');
+  console.error('   Lösung: In package.json @actual-app/api auf die Serverversion anpassen');
+  console.error('   und das Docker-Image neu bauen.');
+  throw new Error('Budget konnte nicht geladen werden');
 }
 
 // ─── Hauptprogramm ────────────────────────────────────────────────────────────
 
 async function main() {
+  if (!CONFIG.password) {
+    console.error('❌ Fehlende Konfiguration: ACTUAL_PASSWORD muss gesetzt sein.');
+    process.exit(1);
+  }
+  if (!CONFIG.syncId) {
+    console.error('❌ Fehlende Konfiguration: ACTUAL_SYNC_ID muss gesetzt sein.');
+    process.exit(1);
+  }
+
   const args = process.argv.slice(2);
 
   if (args.length < 2) {

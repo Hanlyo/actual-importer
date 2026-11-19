@@ -16,6 +16,72 @@ Importiert DKB-Kontoauszüge (CSV) in Actual Budget.
 npm install
 ```
 
+## Docker mit automatischem CSV-Watch (empfohlen für Server)
+
+Der Container überwacht dauerhaft den Ordner `csv/`. Sobald eine `.csv`-Datei dort abgelegt wird, wird sie importiert.
+
+- Bei Erfolg wird die Datei nach `csv/done/` verschoben.
+- Bei Fehler wird die Datei nach `csv/error/` verschoben.
+
+### Vorbereitung
+
+1. `.env`-Datei im Projektverzeichnis anlegen:
+
+```dot
+ACTUAL_PASSWORD=meinpasswort
+ACTUAL_SYNC_ID=1cfdbb80-6274-49bf-b0c2-737235a4c81f
+ACTUAL_ACCOUNT_ID=08a5ac5d-e276-4f28-96e7-28a1118dd9b1
+```
+
+2. Container starten:
+
+```bash
+docker compose up --build -d
+```
+
+3. CSV-Datei in `csv/` legen – der Import startet automatisch.
+
+### Umgebungsvariablen
+
+| Variable | Beschreibung | Standard |
+|---|---|---|
+| `ACTUAL_SERVER_URL` | URL des Actual-Servers | `https://actual.lan` |
+| `ACTUAL_PASSWORD` | Passwort für den Actual-Server | – |
+| `ACTUAL_SYNC_ID` | Sync-ID aus den Actual-Einstellungen | – |
+| `ACTUAL_ACCOUNT_ID` | Account-ID des Zielkontos | – |
+| `POLL_INTERVAL` | Prüfintervall in ms | `5000` |
+| `NODE_TLS_REJECT_UNAUTHORIZED` | TLS-Validierung deaktivieren | `0` |
+
+### Logs ansehen
+
+```bash
+docker logs -f dkb-actual-importer
+```
+
+### Container stoppen
+
+```bash
+docker compose down
+```
+
+### Deploy-Skript
+
+```bash
+./deploy.sh
+```
+
+Startet den Container neu und zeigt danach die Logs.
+
+### Backup der `.env`
+
+Die `.env` enthält das Actual-Passwort. Sichere sie z.B. so:
+
+```bash
+cp .env .env.backup.$(date +%F)
+```
+
+Oder ins Password-Manager-Backup mit aufnehmen.
+
 ## Konfiguration
 
 Die Konfiguration erfolgt über Umgebungsvariablen:
